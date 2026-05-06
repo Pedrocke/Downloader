@@ -120,4 +120,5 @@ jobs:
             
             git commit -m "chore: add downloaded file batch $BATCH_NUM [skip ci]"
             git pull --rebase origin "$BRANCH" || true
-            git push origin
+            git push origin "$BRANCH"
+          done
