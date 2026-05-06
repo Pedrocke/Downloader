@@ -1,24 +1,29 @@
-name: Download OpenVPN Connect DMG
+name: Download OpenVPN Connect DMG and commit to repo
 
 on:
-  # Manual trigger from GitHub UI
-  workflow_dispatch:
-  # Optional: run daily at 02:00 UTC
+  workflow_dispatch:  # manual trigger
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * *'   # optional: daily at 02:00 UTC
+
+permissions:
+  contents: write   # needed to push to the repo
 
 jobs:
-  download:
-    runs-on: macos-latest   # or ubuntu-latest – both can download the file
+  download-and-commit:
+    runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download OpenVPN Connect DMG
         run: |
           curl -L -o openvpn-connect-v3-macos.dmg \
             "https://openvpn.net/downloads/openvpn-connect-v3-macos.dmg"
 
-      - name: Upload DMG as workflow artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: openvpn-connect-dmg
-          path: openvpn-connect-v3-macos.dmg
-          retention-days: 5   # adjust as needed
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add openvpn-connect-v3-macos.dmg
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update OpenVPN Connect DMG"
+          git push
