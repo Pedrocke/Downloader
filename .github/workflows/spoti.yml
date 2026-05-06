@@ -1,4 +1,4 @@
-name: Free Spotify Downloader
+name: Free Spotify Downloader (No Premium)
 
 on:
   workflow_dispatch:
@@ -13,22 +13,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Installs the tool to get track info from a public Spotify link
+      - name: Install ffmpeg (required by yt-dlp)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: Install metadata scraper
         run: npm install spotify-url-info
 
-      # Installs the tool to download the actual audio from YouTube
       - name: Install audio downloader
         run: pip install yt-dlp
 
       - name: Get Track Info and Download
         run: node get-and-download.js "${{ inputs.spotify_url }}"
 
-      - name: Save the MP3 file to the repository
+      - name: Commit MP3 file to repository
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Add downloaded Spotify track"
