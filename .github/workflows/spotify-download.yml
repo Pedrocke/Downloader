@@ -1,33 +1,24 @@
-name: Download Spotify Track
+name: Download OpenVPN Connect DMG
 
 on:
+  # Manual trigger from GitHub UI
   workflow_dispatch:
-    inputs:
-      track_url:
-        description: 'Spotify track URL'
-        required: true
-        type: string
+  # Optional: run daily at 02:00 UTC
+  schedule:
+    - cron: '0 2 * * *'
 
 jobs:
   download:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest   # or ubuntu-latest – both can download the file
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Download OpenVPN Connect DMG
+        run: |
+          curl -L -o openvpn-connect-v3-macos.dmg \
+            "https://openvpn.net/downloads/openvpn-connect-v3-macos.dmg"
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Upload DMG as workflow artifact
+        uses: actions/upload-artifact@v4
         with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: pip install requests
-
-      - name: Download track
-        run: python download.py "${{ inputs.track_url }}"
-
-      - name: Commit & push MP3 file
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Add downloaded track"
-          file_pattern: "downloads/*.mp3"
+          name: openvpn-connect-dmg
+          path: openvpn-connect-v3-macos.dmg
+          retention-days: 5   # adjust as needed
