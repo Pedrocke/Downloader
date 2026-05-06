@@ -1,10 +1,16 @@
-const { getData } = require('spotify-url-info');
+// get-and-download.js (fixed)
+const spotifyFactory = require('spotify-url-info');
 const { execSync } = require('child_process');
 const path = require('path');
 
+// The module must be invoked to obtain the Spotify instance
+const spotify = spotifyFactory(); // <-- this line was missing!
+
 async function downloadSpotifyTrack(url) {
     console.log(`Processing: ${url}`);
-    const trackInfo = await getData(url);
+    
+    // Now getData is a method on the instance
+    const trackInfo = await spotify.getData(url);
     
     const artist = trackInfo.artists[0].name;
     const title = trackInfo.name;
@@ -13,7 +19,7 @@ async function downloadSpotifyTrack(url) {
     const outputPath = path.join(outputDir, safeFileName);
 
     console.log(`Searching YouTube for: ${artist} - ${title}`);
-    // This command tells yt-dlp to search YouTube for this song and download the audio as an MP3
+    // yt-dlp search command with audio extraction & best quality
     const cmd = `yt-dlp -x --audio-format mp3 --audio-quality 0 -o "${outputPath}" "ytsearch1:${artist} - ${title} Official Audio"`;
 
     try {
