@@ -1,29 +1,39 @@
-name: Download OpenVPN Connect DMG and commit to repo
+name: Download & Split OpenVPN DMG
 
 on:
-  workflow_dispatch:  # manual trigger
+  workflow_dispatch:
   schedule:
-    - cron: '0 2 * * *'   # optional: daily at 02:00 UTC
+    - cron: '0 2 * * *'
 
 permissions:
-  contents: write   # needed to push to the repo
+  contents: write
 
 jobs:
-  download-and-commit:
+  split-and-commit:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Download OpenVPN Connect DMG
         run: |
-          curl -L -o openvpn-connect-v3-macos.dmg \
+          curl -L -o openvpn-full.dmg \
             "https://openvpn.net/downloads/openvpn-connect-v3-macos.dmg"
 
-      - name: Commit and push if changed
+      - name: Remove old split files
+        run: rm -f openvpn.dmg.z*  # clean up previous parts
+
+      - name: Split into 100 MB chunks
+        run: split -b 100m -d openvpn-full.dmg openvpn.dmg.z
+        # Creates: openvpn.dmg.z00, z01, z02, ...
+
+      - name: Remove the original DMG
+        run: rm openvpn-full.dmg
+
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add openvpn-connect-v3-macos.dmg
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update OpenVPN Connect DMG"
+          git add openvpn.dmg.z*
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update OpenVPN DMG splits (100 MB parts)"
           git push
