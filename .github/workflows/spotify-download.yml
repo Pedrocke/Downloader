@@ -86,43 +86,43 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
       - name: 📤 Commit and Push to Repository (batched)
-  run: |
-    BRANCH="${GITHUB_REF_NAME}"
-    
-    git config user.name "github-actions[bot]"
-    git config user.email "github-actions[bot]@users.noreply.github.com"
-    
-    # Stage everything initially to see what's new
-    git add ./downloads/
-    
-    if git diff --staged --quiet; then
-      echo "ℹ️ No changes to commit"
-      exit 0
-    fi
-    
-    # Get list of staged files
-    mapfile -t STAGED_FILES < <(git diff --staged --name-only)
-    TOTAL_FILES=${#STAGED_FILES[@]}
-    echo "📦 Found $TOTAL_FILES file(s) to upload"
-    
-    # Unstage all to batch them
-    git reset HEAD ./downloads/
-    
-    BATCH_SIZE=5
-    for (( i=0; i<TOTAL_FILES; i+=BATCH_SIZE )); do
-      BATCH_NUM=$((i / BATCH_SIZE + 1))
-      END=$((i + BATCH_SIZE))
-      [[ $END -gt $TOTAL_FILES ]] && END=$TOTAL_FILES
+    run: |
+      BRANCH="${GITHUB_REF_NAME}"
       
-      echo "🚀 Uploading batch $BATCH_NUM [$((i+1))–${END} of $TOTAL_FILES]"
+      git config user.name "github-actions[bot]"
+      git config user.email "github-actions[bot]@users.noreply.github.com"
       
-      # Stage files for this batch – explicit variable with space
-      for (( j=i; j<END; j++ )); do
-        file="${STAGED_FILES[$j]}"
-        git add "$file"
+      # Stage everything initially to see what's new
+      git add ./downloads/
+      
+      if git diff --staged --quiet; then
+        echo "ℹ️ No changes to commit"
+        exit 0
+      fi
+      
+      # Get list of staged files
+      mapfile -t STAGED_FILES < <(git diff --staged --name-only)
+      TOTAL_FILES=${#STAGED_FILES[@]}
+      echo "📦 Found $TOTAL_FILES file(s) to upload"
+      
+      # Unstage all to batch them
+      git reset HEAD ./downloads/
+      
+      BATCH_SIZE=5
+      for (( i=0; i<TOTAL_FILES; i+=BATCH_SIZE )); do
+        BATCH_NUM=$((i / BATCH_SIZE + 1))
+        END=$((i + BATCH_SIZE))
+        [[ $END -gt $TOTAL_FILES ]] && END=$TOTAL_FILES
+        
+        echo "🚀 Uploading batch $BATCH_NUM [$((i+1))–${END} of $TOTAL_FILES]"
+        
+        # Stage files for this batch – explicit variable with space
+        for (( j=i; j<END; j++ )); do
+          file="${STAGED_FILES[$j]}"
+          git add "$file"
+        done
+        
+        git commit -m "chore: add downloaded file batch $BATCH_NUM [skip ci]"
+        git pull --rebase origin "$BRANCH" || true
+        git push origin "$BRANCH"
       done
-      
-      git commit -m "chore: add downloaded file batch $BATCH_NUM [skip ci]"
-      git pull --rebase origin "$BRANCH" || true
-      git push origin "$BRANCH"
-    done
