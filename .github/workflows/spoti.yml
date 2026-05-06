@@ -1,0 +1,35 @@
+name: Free Spotify Downloader
+
+on:
+  workflow_dispatch:
+    inputs:
+      spotify_url:
+        description: 'Paste your Spotify Track URL here'
+        required: true
+        type: string
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Installs the tool to get track info from a public Spotify link
+      - name: Install metadata scraper
+        run: npm install spotify-url-info
+
+      # Installs the tool to download the actual audio from YouTube
+      - name: Install audio downloader
+        run: pip install yt-dlp
+
+      - name: Get Track Info and Download
+        run: node get-and-download.js "${{ inputs.spotify_url }}"
+
+      - name: Save the MP3 file to the repository
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Add downloaded Spotify track"
+          file_pattern: "downloads/*.mp3"
