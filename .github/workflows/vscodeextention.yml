@@ -3,10 +3,6 @@ name: Download and Split VS Code Extension
 on:
   workflow_dispatch:
     inputs:
-      publisher:
-        description: 'Extension Publisher'
-        required: true
-        type: string
       name:
         description: 'Extension Name'
         required: true
@@ -36,15 +32,14 @@ jobs:
 
       - name: Download extension
         run: |
-          EXTENSION_ID="${{ inputs.publisher }}.${{ inputs.name }}"
-          echo "Downloading extension: $EXTENSION_ID"
+          echo "Downloading extension: ${{ inputs.name }}"
           
           # Create extensions directory
           mkdir -p extensions
           cd extensions
           
           # Download using offvsix
-          offvsix download "$EXTENSION_ID"
+          offvsix download "${{ inputs.name }}"
           
           echo "Download complete"
           ls -lh
@@ -52,7 +47,7 @@ jobs:
       - name: Check size and split if needed
         run: |
           cd extensions
-          EXTENSION_ID="${{ inputs.publisher }}.${{ inputs.name }}"
+          EXTENSION_ID="${{ inputs.name }}"
           
           # Find the downloaded vsix file (offvsix may name it differently)
           FILE=$(ls ${EXTENSION_ID}*.vsix 2>/dev/null || ls *.vsix | head -1)
@@ -89,6 +84,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Add extension: ${{ inputs.publisher }}.${{ inputs.name }}"
+            git commit -m "Add extension: ${{ inputs.name }}"
             git push
           fi
