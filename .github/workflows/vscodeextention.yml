@@ -30,9 +30,9 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install ovsx
+      - name: Install offvsix
         run: |
-          npm install -g @vscode/vsce ovsx
+          pip install git+https://github.com/gni/offvsix.git
 
       - name: Download extension
         run: |
@@ -43,8 +43,8 @@ jobs:
           mkdir -p extensions
           cd extensions
           
-          # Download using ovsx
-          ovsx get "$EXTENSION_ID" --output "${EXTENSION_ID}.vsix"
+          # Download using offvsix
+          offvsix download "$EXTENSION_ID"
           
           echo "Download complete"
           ls -lh
@@ -53,7 +53,14 @@ jobs:
         run: |
           cd extensions
           EXTENSION_ID="${{ inputs.publisher }}.${{ inputs.name }}"
-          FILE="${EXTENSION_ID}.vsix"
+          
+          # Find the downloaded vsix file (offvsix may name it differently)
+          FILE=$(ls ${EXTENSION_ID}*.vsix 2>/dev/null || ls *.vsix | head -1)
+          
+          if [ -z "$FILE" ]; then
+            echo "Error: No .vsix file found"
+            exit 1
+          fi
           
           # Get file size in MB
           SIZE_MB=$(du -m "$FILE" | cut -f1)
