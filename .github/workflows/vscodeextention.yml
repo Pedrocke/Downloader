@@ -33,29 +33,22 @@ jobs:
       - name: Download extension
         run: |
           echo "Downloading extension: ${{ inputs.name }}"
-          
-          # Create extensions directory
-          mkdir -p extensions
-          cd extensions
-          
-          # Download using offvsix
           offvsix "${{ inputs.name }}"
-          
           echo "Download complete"
-          ls -lh
 
       - name: Check size and split if needed
         run: |
           cd extensions
-          EXTENSION_ID="${{ inputs.name }}"
           
-          # Find the downloaded vsix file (offvsix may name it differently)
-          FILE=$(ls ${EXTENSION_ID}*.vsix 2>/dev/null || ls *.vsix | head -1)
+          # Find the downloaded vsix file
+          FILE=$(ls *.vsix)
           
           if [ -z "$FILE" ]; then
             echo "Error: No .vsix file found"
             exit 1
           fi
+          
+          echo "Found file: $FILE"
           
           # Get file size in MB
           SIZE_MB=$(du -m "$FILE" | cut -f1)
@@ -63,7 +56,8 @@ jobs:
           
           if [ $SIZE_MB -gt 100 ]; then
             echo "Extension exceeds 100MB, splitting into parts..."
-            zip -r -s 100m "${EXTENSION_ID}-split.zip" "$FILE"
+            BASENAME="${FILE%.vsix}"
+            zip -r -s 100m "${BASENAME}-split.zip" "$FILE"
             
             # Remove original file to save space
             rm "$FILE"
