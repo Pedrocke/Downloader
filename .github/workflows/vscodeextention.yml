@@ -39,7 +39,7 @@ jobs:
           cd extensions
           
           # Download using offvsix
-          offvsix ${{ inputs.name }}
+          offvsix "${{ inputs.name }}"
           
           echo "Download complete"
           ls -lh
